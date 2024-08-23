@@ -597,7 +597,7 @@ static enum fio_q_status io_u_submit(struct thread_data *td, struct io_u *io_u)
 	 * Check for overlap if the user asked us to, and we have
 	 * at least one IO in flight besides this one.
 	 */
-	if (td->o.serialize_overlap && td->cur_depth > 1 &&
+	if (td->o.serialize == SERIALIZE_OVERLAP && td->cur_depth > 1 &&
 	    in_flight_overlap(&td->io_u_all, io_u))
 		return FIO_Q_BUSY;
 

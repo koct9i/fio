@@ -768,16 +768,30 @@ static int fixup_options(struct thread_data *td)
 	 * isn't changing data or the maximum iodepth is guaranteed to be 1
 	 * when we are not in offload mode
 	 */
-	if (o->serialize_overlap && !(td->flags & TD_F_READ_IOLOG) &&
+	if (o->serialize == SERIALIZE_OVERLAP && !(td->flags & TD_F_READ_IOLOG) &&
 	    (!(td_write(td) || td_trim(td)) || o->iodepth == 1) &&
 	    o->io_submit_mode != IO_MODE_OFFLOAD)
-		o->serialize_overlap = 0;
+		o->serialize = SERIALIZE_NONE;
 
 	if (o->nr_files > td->files_index)
 		o->nr_files = td->files_index;
 
 	if (o->open_files > o->nr_files || !o->open_files)
 		o->open_files = o->nr_files;
+
+	if (td_ioengine_flagged(td, FIO_NO_CONCURRENT_FILE_IO) && o->iodepth > 1) {
+		if (o->serialize != SERIALIZE_NONE) {
+			log_err("fio: this ioengine for iodepth > 1 requires serialize=file\n");
+			ret |= 1;
+		} else {
+			o->serialize = SERIALIZE_FILE;
+		}
+	}
+
+	if (o->serialize == SERIALIZE_FILE && o->iodepth > o->open_files) {
+		log_err("fio: for serialize=file iodepth > open_files makes no sense\n");
+		ret |= warnings_fatal;
+	}
 
 	if (((o->rate[DDIR_READ] + o->rate[DDIR_WRITE] + o->rate[DDIR_TRIM]) &&
 	    (o->rate_iops[DDIR_READ] + o->rate_iops[DDIR_WRITE] + o->rate_iops[DDIR_TRIM])) ||

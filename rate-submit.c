@@ -39,7 +39,7 @@ retry:
 	for_each_td(td) {
 		if (td->runstate <= TD_SETTING_UP ||
 		    td->runstate >= TD_FINISHING ||
-		    !td->o.serialize_overlap ||
+		    td->o.serialize != SERIALIZE_OVERLAP ||
 		    td->o.io_submit_mode != IO_MODE_OFFLOAD)
 			continue;
 
@@ -68,7 +68,7 @@ static int io_workqueue_fn(struct submit_worker *sw,
 	struct thread_data *td = sw->priv;
 	int ret, error;
 
-	if (td->o.serialize_overlap)
+	if (td->o.serialize == SERIALIZE_OVERLAP)
 		check_overlap(io_u);
 
 	dprint(FD_RATE, "io_u %p queued by %u\n", io_u, gettid());

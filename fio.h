@@ -167,6 +167,10 @@ enum {
 
 	THINKTIME_BLOCKS_TYPE_COMPLETE = 0,
 	THINKTIME_BLOCKS_TYPE_ISSUE = 1,
+
+	SERIALIZE_NONE = 0,
+	SERIALIZE_OVERLAP = 1,
+	SERIALIZE_FILE = 2,
 };
 
 enum {
@@ -235,6 +239,7 @@ struct thread_data {
 	unsigned int files_index;
 	unsigned int nr_open_files;
 	unsigned int nr_done_files;
+	unsigned int nr_busy_files;
 	union {
 		unsigned int next_file;
 		struct frand_state next_file_state;
@@ -850,7 +855,7 @@ static inline bool td_async_processing(struct thread_data *td)
 
 static inline bool td_offload_overlap(struct thread_data *td)
 {
-	return td->o.serialize_overlap && td->o.io_submit_mode == IO_MODE_OFFLOAD;
+	return td->o.serialize == SERIALIZE_OVERLAP && td->o.io_submit_mode == IO_MODE_OFFLOAD;
 }
 
 /*
